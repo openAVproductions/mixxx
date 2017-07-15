@@ -127,6 +127,7 @@ class CtlraLibrary(Dependence):
         build.env.Append(CCFLAGS="-I" + ctlra_env + "/ctlra/")
         build.env.Append(LINKFLAGS= str(ctlra_link_path) )
         build.env.Append(LIBS='ctlra')
+        build.env.Append(LIBS='tcc')
 
 class OggVorbis(Dependence):
 

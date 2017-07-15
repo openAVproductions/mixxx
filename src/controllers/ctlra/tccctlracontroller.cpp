@@ -63,27 +63,24 @@ void TccCtlraController::event_func(struct ctlra_dev_t* dev,
 				     uint32_t num_events,
 				     struct ctlra_event_t** events)
 {
-#if 0
 	/* Check if we need to recompile script based on modified time of
 	 * the script file, comparing with the compiled modified time. If
 	 * we need to update, swap the pointer to handle events here */
 	time_t new_time;
-	int err = file_modify_time(filepath,
-				   &new_time);
+	int err = file_modify_time(filepath, &new_time);
 	if(err) {
 		printf("%s: error getting file modified time\n", __func__);
 	}
 	if(new_time > time_modified) {
 		printf("tcc: recompiling %s\n", filepath);
-		int ret = compile(script);
+		int ret = compile();
 		if(ret)
 			printf("tcc: error recompiling %s\n", filepath);
 	}
 
 	/* Handle events */
-	if(tcc_event_func)
-		tcc_event_func(dev, num_events, events, instance_ud);
-#endif
+	if(dyn_event_func)
+		dyn_event_func(dev, num_events, events, instance_ud);
 }
 
 TccCtlraController::TccCtlraController(const struct ctlra_dev_info_t* info) :
@@ -95,4 +92,108 @@ TccCtlraController::TccCtlraController(const struct ctlra_dev_info_t* info) :
 
 TccCtlraController::~TccCtlraController()
 {
+}
+
+int TccCtlraController::compile()
+{
+	printf("tcc_script example: compiling %s\n", filepath);
+
+	TCCState *s = tcc_new();
+	if(!s) {
+		error("failed to create tcc context\n");
+		return -ENOMEM;
+	}
+
+	tcc_set_error_func(s, NULL, error_func);
+	tcc_set_options(s, "-g");
+	tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
+
+	int ret = tcc_add_file(s, filepath);
+	if(ret < 0) {
+		printf("CtlraController: TCC Error, removing script from use.\n");
+		tcc_delete(s);
+		/* TODO: Show a QT Warning dialog saying script has a
+		 * compile error? */
+		return -EINVAL;
+	}
+	/* Add a C linkage function to set a value */
+	tcc_add_symbol(s, "mixxx_config_key_set", (void *)mixxx_config_key_set);
+	if(ret < 0) {
+		error("failed to insert MCK_set() symbol\n");
+		return -EINVAL;
+	}
+	tcc_add_symbol(s, "mixxx_config_key_get", (void *)mixxx_config_key_get);
+	if(ret < 0) {
+		error("failed to insert MCK_get() symbol\n");
+		return -EINVAL;
+	}
+	tcc_add_symbol(s, "mixxx_config_key_toggle", (void *)mixxx_config_key_toggle);
+	if(ret < 0) {
+		error("failed to insert MCK_toggle() symbol\n");
+		return -EINVAL;
+	}
+#if 0
+	tcc_add_symbol(s, "ctlra_dev_light_set", (void *)ctlra_dev_light_set);
+	if(ret < 0) {
+		error("failed to insert ctlra light set() symbol\n");
+		return -EINVAL;
+	}
+	tcc_add_symbol(s, "ctlra_dev_light_flush", (void *)ctlra_dev_light_flush);
+	if(ret < 0) {
+		error("failed to insert ctlra light set() symbol\n");
+		return -EINVAL;
+	}
+#endif
+
+	if(program)
+		free(program);
+
+	program = malloc(tcc_relocate(s, NULL));
+	if(!program)
+		error("failed to alloc mem for program\n");
+	ret = tcc_relocate(s, program);
+	if(ret < 0)
+		error("failed to relocate code to program memory\n");
+
+	dyn_get_vid_pid = (script_get_vid_pid)
+	                      tcc_get_symbol(s, "script_get_vid_pid");
+	if(!dyn_get_vid_pid)
+		error("failed to find script_get_vid_pid function\n");
+
+	dyn_event_func = (script_event_func)
+	                      tcc_get_symbol(s, "script_event_func");
+	if(!dyn_event_func)
+		error("failed to find script_event_func function\n");
+
+	dyn_init_func = (script_init_func)
+	                      tcc_get_symbol(s, "script_init_func");
+	if(!dyn_init_func)
+		error("failed to find script_init_func function\n");
+
+	dyn_feedback_func = (script_feedback_func)
+	                      tcc_get_symbol(s, "script_feedback_func");
+	if(!dyn_feedback_func)
+		error("failed to find script_feedback_func function\n");
+
+	tcc_delete(s);
+
+	int err = file_modify_time(filepath, &time_modified);
+	if(err) {
+		printf("%s: error getting file modified time\n", __func__);
+		return -ENOENT;
+	}
+
+	/* Call the init func of the script, allocs mem for device trackin*/
+	if(instance_ud)
+		free(instance_ud);
+
+	if(dyn_init_func) {
+		int size = dyn_init_func();
+		printf("script instance dyn_init_func() size = %d\n", size);
+		instance_ud = calloc(1, size);
+	} else {
+		instance_ud = 0x0;
+	}
+
+	return 0;
 }
