@@ -14,13 +14,10 @@ class TccCtlraController : public CtlraController
 {
 	Q_OBJECT
 public:
-	TccCtlraController(const struct ctlra_dev_info_t* info) :
-		CtlraController(info)
-	{}
-	virtual ~TccCtlraController() {}
+	TccCtlraController(const struct ctlra_dev_info_t* info);
+	virtual ~TccCtlraController();
 
-	// this virtual function that handles any input data. Derived
-	// classes can override it in order to access events.
+	/* overridden to forward events to TCC instance of handle func */
 	virtual void event_func(struct ctlra_dev_t* dev,
 				uint32_t num_events,
 				struct ctlra_event_t** events) override;

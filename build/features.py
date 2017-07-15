@@ -166,6 +166,7 @@ class Ctlra(Feature):
     def sources(self, build):
         if build.platform_is_linux:
             sources = ['controllers/ctlra/ctlraenumerator.cpp',
+                       'controllers/ctlra/tccctlracontroller.cpp',
                        'controllers/ctlra/ctlracontroller.cpp']
             return sources
         return []
