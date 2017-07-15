@@ -83,9 +83,15 @@ void TccCtlraController::event_func(struct ctlra_dev_t* dev,
 	/* Handle events */
 	if(dyn_event_func)
 		dyn_event_func(dev, num_events, events, instance_ud);
-	else
-		printf("no dyn event func\n");
 }
+
+
+void TccCtlraController::feedback_func(struct ctlra_dev_t *dev)
+{
+	if(dyn_feedback_func)
+		dyn_feedback_func(dev, instance_ud);
+}
+
 
 TccCtlraController::TccCtlraController(const struct ctlra_dev_info_t* info) :
 	CtlraController(info),

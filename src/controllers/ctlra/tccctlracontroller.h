@@ -24,6 +24,10 @@ public:
 				uint32_t num_events,
 				struct ctlra_event_t** events) override;
 
+
+	/* overridden to provide feedback events to the device */
+	virtual void feedback_func(struct ctlra_dev_t *dev) override;
+
 private:
 	/* A pointer to memory malloced for the generated code */
 	void *program;
