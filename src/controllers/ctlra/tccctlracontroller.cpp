@@ -74,23 +74,31 @@ void TccCtlraController::event_func(struct ctlra_dev_t* dev,
 	if(new_time > time_modified) {
 		printf("tcc: recompiling %s\n", filepath);
 		int ret = compile();
-		if(ret)
+		if(ret) {
 			printf("tcc: error recompiling %s\n", filepath);
+			dyn_event_func = 0;
+		}
 	}
 
 	/* Handle events */
 	if(dyn_event_func)
 		dyn_event_func(dev, num_events, events, instance_ud);
+	else
+		printf("no dyn event func\n");
 }
 
 TccCtlraController::TccCtlraController(const struct ctlra_dev_info_t* info) :
 	CtlraController(info),
+	program(0),
+	instance_ud(0),
+	time_modified(0),
 	dyn_get_vid_pid(0),
 	dyn_init_func(0),
 	dyn_event_func(0),
 	dyn_feedback_func(0)
 {
 	/* initialize the TCC context here */
+	filepath = "ni_z1_script.c";
 }
 
 
@@ -136,7 +144,6 @@ int TccCtlraController::compile()
 		error("failed to insert MCK_toggle() symbol\n");
 		return -EINVAL;
 	}
-#if 0
 	tcc_add_symbol(s, "ctlra_dev_light_set", (void *)ctlra_dev_light_set);
 	if(ret < 0) {
 		error("failed to insert ctlra light set() symbol\n");
@@ -147,12 +154,11 @@ int TccCtlraController::compile()
 		error("failed to insert ctlra light set() symbol\n");
 		return -EINVAL;
 	}
-#endif
 
 	if(program)
 		free(program);
 
-	program = malloc(tcc_relocate(s, NULL));
+	program = calloc(1, tcc_relocate(s, NULL));
 	if(!program)
 		error("failed to alloc mem for program\n");
 	ret = tcc_relocate(s, program);
