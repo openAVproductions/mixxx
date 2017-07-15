@@ -10,6 +10,7 @@
 
 #include "control/controlproxy.h"
 #include "controllers/ctlra/ctlracontroller.h"
+#include "controllers/ctlra/tccctlracontroller.h"
 
 #include "ctlra.h"
 
@@ -94,7 +95,8 @@ int CtlraEnumerator::accept_dev_func(struct mixxx_ctlra_accept_t *a)
 	*a->feedback_func = mixxx_feedback_func;
 
 	// here we add the CtlraController instance to the GUI
-	CtlraController *c = new CtlraController(a->info);
+	// TODO: detect which to use; TCC or "Normal" Ctlra Controller
+	CtlraController *c = new TccCtlraController(a->info);
 	m_devices.push_back(c);
 
 	// pass the CtlraController as the userdata pointer to the event

@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Ctlra functions */
 void ctlra_dev_light_set(struct ctlra_dev_t *dev,
 			uint32_t light_id,
@@ -35,3 +39,7 @@ typedef void (*script_event_func)(struct ctlra_dev_t* dev,
  * LED status based on that */
 typedef void (*script_feedback_func)(struct ctlra_dev_t* dev,
 				     void *userdata);
+
+#ifdef __cplusplus
+}
+#endif

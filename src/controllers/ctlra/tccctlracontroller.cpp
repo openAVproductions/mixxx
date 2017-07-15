@@ -84,7 +84,11 @@ void TccCtlraController::event_func(struct ctlra_dev_t* dev,
 }
 
 TccCtlraController::TccCtlraController(const struct ctlra_dev_info_t* info) :
-	CtlraController(info)
+	CtlraController(info),
+	dyn_get_vid_pid(0),
+	dyn_init_func(0),
+	dyn_event_func(0),
+	dyn_feedback_func(0)
 {
 	/* initialize the TCC context here */
 }
@@ -162,8 +166,10 @@ int TccCtlraController::compile()
 
 	dyn_event_func = (script_event_func)
 	                      tcc_get_symbol(s, "script_event_func");
-	if(!dyn_event_func)
+	if(!dyn_event_func) {
 		error("failed to find script_event_func function\n");
+		return -EINVAL;
+	}
 
 	dyn_init_func = (script_init_func)
 	                      tcc_get_symbol(s, "script_init_func");
