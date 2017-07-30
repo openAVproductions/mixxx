@@ -129,6 +129,8 @@ CtlraEnumerator::CtlraEnumerator() : ControllerEnumerator()
 
 CtlraEnumerator::~CtlraEnumerator()
 {
+	m_reader->stop();
+
 	qDebug() << "Deleting Ctlra devices...";
 	while (m_devices.size() > 0) {
 		delete m_devices.takeLast();
