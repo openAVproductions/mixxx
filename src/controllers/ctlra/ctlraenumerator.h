@@ -41,11 +41,11 @@ class CtlraEnumerator : public ControllerEnumerator {
     CtlraEnumerator();
     virtual ~CtlraEnumerator();
 
-    QList<Controller*> queryDevices();
+    virtual QList<Controller*> queryDevices();
 
     // accept function, called once per device, and for hotplug arrival
     // this is public so it can be called from the static wrapper
-    int accept_dev_func(struct mixxx_ctlra_accept_t*);
+    virtual int accept_dev_func(struct mixxx_ctlra_accept_t*);
 
   private:
     QList<Controller*> m_devices;

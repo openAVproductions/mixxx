@@ -80,7 +80,7 @@ void TccCtlraController::event_func(struct ctlra_dev_t* dev,
 		}
 	}
 
-	/* Handle events */
+	/* Handle event */
 	if(dyn_event_func)
 		dyn_event_func(dev, num_events, events, instance_ud);
 }
@@ -104,7 +104,7 @@ TccCtlraController::TccCtlraController(const struct ctlra_dev_info_t* info) :
 	dyn_feedback_func(0)
 {
 	/* initialize the TCC context here */
-	filepath = "ni_z1_script.c";
+	filepath = "ni_s2_script.c";
 }
 
 
