@@ -72,6 +72,7 @@ public:
 	}
 
 protected:
+	struct ctlra_dev_info_t *info;
 	//Q_INVOKABLE void send(QList<int> data, unsigned int length, unsigned int reportID = 0);
 
 private slots:

@@ -9,6 +9,7 @@
 #include "controllers/ctlra/tccctlracontroller.h"
 #include "controllers/ctlra/tccctlracontroller.h"
 
+#include "ctlra.h"
 #include "libtcc.h"
 
 static void error_func(void *userdata, const char *msg)
@@ -103,10 +104,30 @@ TccCtlraController::TccCtlraController(const struct ctlra_dev_info_t* info) :
 	dyn_event_func(0),
 	dyn_feedback_func(0)
 {
-	/* initialize the TCC context here */
-	filepath = "ni_s2_script.c";
-}
+	this->info = (struct ctlra_dev_info_t*)
+		malloc(sizeof(struct ctlra_dev_info_t));
+	if(!this->info) {
+		printf("error allocating tccCtlraController info\n");
+		return;
+	}
+	*this->info = *info;
 
+	/* call function to scan available scripts */
+	printf("%s: %s: %s\n", __PRETTY_FUNCTION__, info->vendor, info->device);
+
+	/* match vendor/device against available scripts, select filepath */
+	filepath = "ni_d2_script.c";
+
+	if((strcmp(this->info->vendor, "Native Instruments") == 0) &&
+	   (strcmp(this->info->device, "Kontrol Z1") == 0)) {
+		filepath = "ni_z1_script.c";
+	}
+	if((strcmp(this->info->vendor, "Native Instruments") == 0) &&
+	   (strcmp(this->info->device, "Kontrol S2 Mk2") == 0)) {
+		filepath = "ni_s2_script.c";
+	}
+
+}
 
 TccCtlraController::~TccCtlraController()
 {
