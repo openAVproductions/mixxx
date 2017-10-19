@@ -126,6 +126,10 @@ TccCtlraController::TccCtlraController(const struct ctlra_dev_info_t* info) :
 	   (strcmp(this->info->device, "Kontrol S2 Mk2") == 0)) {
 		filepath = "ni_s2_script.c";
 	}
+	if((strcmp(this->info->vendor, "Native Instruments") == 0) &&
+	   (strcmp(this->info->device, "Kontrol X1 Mk2") == 0)) {
+		filepath = "ni_x1_script.c";
+	}
 
 }
 
