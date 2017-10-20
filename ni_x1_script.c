@@ -19,6 +19,12 @@ void script_get_vid_pid(int *out_vid, int *out_pid)
 
 struct x1_t {
 	uint8_t shift_pressed; /* 0 or 1 when "mode" button is pressed */
+
+	/* fx rack: manualy handle "mix" value as enable, since turning
+	 * on/off the actual "enable" control creates a pop. The enable
+	 * stores the "software" enable switch, and mix the actaul value */
+	float fx_rack_enable[2];
+	float fx_rack_mix[2];
 };
 
 int script_init_func()
@@ -49,9 +55,15 @@ void script_event_func(struct ctlra_dev_t* dev,
 			pr = e->button.pressed;
 			printf("btn: %d %d\n", e->button.id, pr);
 			switch(e->button.id) {
-
 			/* FX 1 (left) enable buttons */
-			case 0: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit1]", "enabled"); break;
+			case 0: {
+				if(pr)
+					x1->fx_rack_enable[0] = !x1->fx_rack_enable[0];
+				int enable = x1->fx_rack_enable[0];
+				float val = enable ? x1->fx_rack_mix[0] : 0.f;
+				mixxx_config_key_set("[EffectRack1_EffectUnit1]", "mix", val);
+				}
+				break;
 			case 1: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit1_Effect1]", "enabled"); break;
 			case 2: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit1_Effect2]", "enabled"); break;
 			case 3: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit1_Effect3]", "enabled"); break;
@@ -137,7 +149,13 @@ void script_event_func(struct ctlra_dev_t* dev,
 		case CTLRA_EVENT_SLIDER:
 			switch(e->slider.id) {
 			/* FX 1 - top left */
-			case 0: mixxx_config_key_set("[EffectRack1_EffectUnit1]", "mix", e->slider.value); break;
+			case 0: x1->fx_rack_mix[0] = e->slider.value;
+				int enable = x1->fx_rack_enable[0];
+				if(enable) {
+					float val = enable ? x1->fx_rack_mix[0] : 0.f;
+					mixxx_config_key_set("[EffectRack1_EffectUnit1]", "mix", val);
+				}
+				break;
 			case 1: mixxx_config_key_set("[EffectRack1_EffectUnit1_Effect1]", "meta", e->slider.value); break;
 			case 2: mixxx_config_key_set("[EffectRack1_EffectUnit1_Effect2]", "meta", e->slider.value); break;
 			case 3: mixxx_config_key_set("[EffectRack1_EffectUnit1_Effect3]", "meta", e->slider.value); break;
@@ -175,29 +193,25 @@ void script_feedback_func(struct ctlra_dev_t *dev, void *userdata)
 	const uint32_t red      = 0x00ef0000;
 	const uint32_t purple   = 0x00ef00ef;
 
-	if(x1->shift_pressed) {
-	}
-	else {
-		float pfl_1 = mixxx_config_key_get("[Channel1]","pfl");
-		float pfl_2 = mixxx_config_key_get("[Channel2]","pfl");
-		float filter_1 = mixxx_config_key_get(
-				 "[QuickEffectRack1_[Channel1]_Effect1]", "enabled");
-		float filter_2 = mixxx_config_key_get(
-				 "[QuickEffectRack1_[Channel2]_Effect1]", "enabled");
+	/* FX 1 leds */
+	float fx1_enable = (x1->fx_rack_enable[0]);
+	ctlra_dev_light_set(dev, 0, fx1_enable ? high : 0x03030303);
+	float fx1_e1_enable = mixxx_config_key_get("[EffectRack1_EffectUnit1_Effect1]", "enabled");
+	ctlra_dev_light_set(dev, 1, fx1_e1_enable ? high : 0x03030303);
+	float fx1_e2_enable = mixxx_config_key_get("[EffectRack1_EffectUnit1_Effect2]", "enabled");
+	ctlra_dev_light_set(dev, 2, fx1_e2_enable ? high : 0x03030303);
+	float fx1_e3_enable = mixxx_config_key_get("[EffectRack1_EffectUnit1_Effect3]", "enabled");
+	ctlra_dev_light_set(dev, 3, fx1_e3_enable ? high : 0x03030303);
 
-		int c1pfl_value = pfl_1 > 0.5;
-		int c2pfl_value = pfl_2 > 0.5;
-		int c1fon_val = filter_1 > 0.5;
-		int c2fon_val = filter_2 > 0.5;
-
-		ctlra_dev_light_set(dev, 14, c1pfl_value ? high : low);
-		ctlra_dev_light_set(dev, 15, c2pfl_value ? high : low);
-
-		ctlra_dev_light_set(dev, 16, c1fon_val ? blue : blue_low);
-		ctlra_dev_light_set(dev, 19, c2fon_val ? blue : blue_low);
-
-		ctlra_dev_light_set(dev, 18, low);
-	}
+	/* FX 2 leds */
+	float fx2_enable = mixxx_config_key_get("[EffectRack1_EffectUnit2]", "enabled");
+	ctlra_dev_light_set(dev, 4, fx2_enable ? high : 0x03030303);
+	float fx2_e1_enable = mixxx_config_key_get("[EffectRack1_EffectUnit2_Effect1]", "enabled");
+	ctlra_dev_light_set(dev, 5, fx2_e1_enable ? high : 0x03030303);
+	float fx2_e2_enable = mixxx_config_key_get("[EffectRack1_EffectUnit2_Effect2]", "enabled");
+	ctlra_dev_light_set(dev, 6, fx2_e2_enable ? high : 0x03030303);
+	float fx2_e3_enable = mixxx_config_key_get("[EffectRack1_EffectUnit2_Effect3]", "enabled");
+	ctlra_dev_light_set(dev, 7, fx2_e3_enable ? high : 0x03030303);
 
 	/* Left channel hotcues */
 	float c1_hot1 = mixxx_config_key_get("[Channel1]", "hotcue_1_enabled");
@@ -219,11 +233,11 @@ void script_feedback_func(struct ctlra_dev_t *dev, void *userdata)
 	ctlra_dev_light_set(dev, 25, c2_hot3 ? lblue  : low );
 	ctlra_dev_light_set(dev, 26, c2_hot4 ? green  : low );
 
+	/* play/cue indicators */
 	float c1_play = mixxx_config_key_get("[Channel1]","play_indicator");
 	float c2_play = mixxx_config_key_get("[Channel2]","play_indicator");
 	ctlra_dev_light_set(dev, 32, c1_play > 0.5 ? high : low);
 	ctlra_dev_light_set(dev, 34, c2_play > 0.5 ? high : low);
-
 	float c1_cue = mixxx_config_key_get("[Channel1]","cue_indicator");
 	float c2_cue = mixxx_config_key_get("[Channel2]","cue_indicator");
 	ctlra_dev_light_set(dev, 31, c1_cue > 0.5 ? high : low);
