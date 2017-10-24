@@ -130,6 +130,10 @@ TccCtlraController::TccCtlraController(const struct ctlra_dev_info_t* info) :
 	   (strcmp(this->info->device, "Kontrol X1 Mk2") == 0)) {
 		filepath = "ni_x1_script.c";
 	}
+	if((strcmp(this->info->vendor, "Native Instruments") == 0) &&
+	   (strcmp(this->info->device, "Kontrol F1") == 0)) {
+		filepath = "ni_f1_script.c";
+	}
 	if((strcmp(this->info->vendor, "3DConnexion") == 0) &&
 	   (strcmp(this->info->device, "SpaceMouse Pro") == 0)) {
 		filepath = "spacemouse_script.c";
