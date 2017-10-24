@@ -73,6 +73,7 @@ void script_event_func(struct ctlra_dev_t* dev,
 			case 6: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit2_Effect2]", "enabled"); break;
 			case 7: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit2_Effect3]", "enabled"); break;
 
+			case 13: mixxx_config_key_toggle("[Library]", "MoveFocus"); break;
 			/* left hotcue */
 			case 16: case 17: case 18: case 19: {
 				int i = e->button.id - 16;
@@ -97,33 +98,6 @@ void script_event_func(struct ctlra_dev_t* dev,
 			case 33: /* center encoder touch */ break;
 			case 33: /* left encoder touch */ break;
 			case 35: if(pr) mixxx_config_key_set("[Library]", "ChooseItem", 1); break;
-#if 0
-
-			case 0: if (x1->shift_pressed)
-					mixxx_config_key_toggle("[Channel1]", "hotcue_1_activate");
-				else if(pr) {
-					mixxx_config_key_toggle("[Channel1]", "pfl");
-				}
-				break;
-			case 1: if (x1->shift_pressed)
-					mixxx_config_key_toggle("[Channel2]", "hotcue_1_activate");
-				else if(pr)
-					mixxx_config_key_toggle("[Channel2]", "pfl"); break;
-			/* mode button */
-			case 2: x1->shift_pressed = e->button.pressed; break;
-			case 3: if(pr)
-					if(x1->shift_pressed)
-						mixxx_config_key_toggle("[Channel1]", "play");
-					else
-						mixxx_config_key_toggle("[QuickEffectRack1_[Channel1]_Effect1]", "enabled");
-				break;
-			case 4: if(pr)
-					if(x1->shift_pressed)
-						mixxx_config_key_toggle("[Channel2]", "play");
-					else
-						mixxx_config_key_toggle("[QuickEffectRack1_[Channel2]_Effect1]", "enabled");
-				break;
-#endif
 			default: break;
 			} break;
 
@@ -133,16 +107,17 @@ void script_event_func(struct ctlra_dev_t* dev,
 				int dir = ((e->encoder.delta > 0) * 2) - 1;
 				mixxx_config_key_set("[Library]", "MoveVertical", dir);
 				} break;
+			case 0: if(e->encoder.delta > 0)
+					mixxx_config_key_set("[Channel1]", "rate_perm_down_small", 1.f);
+				else
+					mixxx_config_key_set("[Channel1]", "rate_perm_up_small", 1.f);
+				break;
+			case 2: if(e->encoder.delta > 0)
+					mixxx_config_key_set("[Channel2]", "rate_perm_down_small", 1.f);
+				else
+					mixxx_config_key_set("[Channel2]", "rate_perm_up_small", 1.f);
+				break;
 			default: printf("enc %d\n", e->encoder.id); break;
-#if 0
-			case 26: // "Load B": move focus forward
-				if(pr) mixxx_config_key_set("[Library]", "MoveFocusForward", 1);
-				break;
-			case 27: // "Load A": move focus backward
-				if(pr) mixxx_config_key_set("[Library]", "MoveFocusBackward", 1);
-				break;
-			case 48: if(pr) mixxx_config_key_set("[Library]", "ChooseItem", 1); break;
-#endif
 			}
 			break;
 
