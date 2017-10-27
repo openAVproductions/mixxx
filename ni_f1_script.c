@@ -46,6 +46,11 @@ void script_event_func(struct ctlra_dev_t* dev,
 {
 	struct f1_t *f1 = userdata;
 
+	struct ctlra_event_t *e = events[0];
+	int id = e->grid.pos;
+	int pr = e->grid.pressed;
+	//printf("grid: %d %d\n", id, pr);
+
 	for(uint32_t i = 0; i < num_events; i++) {
 		struct ctlra_event_t *e = events[i];
 		int pr = 0;

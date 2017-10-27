@@ -18,6 +18,7 @@ void script_get_vid_pid(int *out_vid, int *out_pid)
 }
 
 struct x1_t {
+	uint8_t init;
 	uint8_t shift_pressed; /* 0 or 1 when "mode" button is pressed */
 
 	/* fx rack: manualy handle "mix" value as enable, since turning
@@ -72,6 +73,15 @@ void script_event_func(struct ctlra_dev_t* dev,
 			case 5: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit2_Effect1]", "enabled"); break;
 			case 6: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit2_Effect2]", "enabled"); break;
 			case 7: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit2_Effect3]", "enabled"); break;
+			/* Fx1 deck A enable */
+			case 8: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit1]",
+							       "group_[Channel1]_enable"); break;
+			case 9: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit2]",
+							       "group_[Channel1]_enable"); break;
+			case 10: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit1]",
+							       "group_[Channel2]_enable"); break;
+			case 11: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit2]",
+							       "group_[Channel2]_enable"); break;
 
 			case 13: mixxx_config_key_toggle("[Library]", "MoveFocus"); break;
 			/* left hotcue */
@@ -108,14 +118,14 @@ void script_event_func(struct ctlra_dev_t* dev,
 				mixxx_config_key_set("[Library]", "MoveVertical", dir);
 				} break;
 			case 0: if(e->encoder.delta > 0)
-					mixxx_config_key_set("[Channel1]", "rate_perm_down_small", 1.f);
-				else
 					mixxx_config_key_set("[Channel1]", "rate_perm_up_small", 1.f);
+				else
+					mixxx_config_key_set("[Channel1]", "rate_perm_down_small", 1.f);
 				break;
 			case 2: if(e->encoder.delta > 0)
-					mixxx_config_key_set("[Channel2]", "rate_perm_down_small", 1.f);
-				else
 					mixxx_config_key_set("[Channel2]", "rate_perm_up_small", 1.f);
+				else
+					mixxx_config_key_set("[Channel2]", "rate_perm_down_small", 1.f);
 				break;
 			default: printf("enc %d\n", e->encoder.id); break;
 			}
@@ -153,6 +163,12 @@ void script_event_func(struct ctlra_dev_t* dev,
 void script_feedback_func(struct ctlra_dev_t *dev, void *userdata)
 {
 	struct x1_t *x1 = userdata;
+
+	if(!x1->init) {
+		for(int i = 0; i < 255; i++)
+			ctlra_dev_light_set(dev, i, 0x0);
+		x1->init = 1;
+	}
 
 	/* define the brightest / dimmest of toggling LEDs */
 	const uint32_t high = 0xffffffff;
@@ -217,6 +233,36 @@ void script_feedback_func(struct ctlra_dev_t *dev, void *userdata)
 	float c2_cue = mixxx_config_key_get("[Channel2]","cue_indicator");
 	ctlra_dev_light_set(dev, 31, c1_cue > 0.5 ? high : low);
 	ctlra_dev_light_set(dev, 33, c2_cue > 0.5 ? high : low);
+
+
+	float c1_fx1 = mixxx_config_key_get("[EffectRack1_EffectUnit1]",
+					    "group_[Channel1]_enable");
+	float c1_fx2 = mixxx_config_key_get("[EffectRack1_EffectUnit2]",
+					    "group_[Channel1]_enable");
+	ctlra_dev_light_set(dev, 8, c1_fx1 > 0.5 ? high : low);
+	ctlra_dev_light_set(dev, 9, c1_fx2 > 0.5 ? high : low);
+	float c2_fx1 = mixxx_config_key_get("[EffectRack1_EffectUnit1]",
+					    "group_[Channel2]_enable");
+	float c2_fx2 = mixxx_config_key_get("[EffectRack1_EffectUnit2]",
+					    "group_[Channel2]_enable");
+	ctlra_dev_light_set(dev, 14, c2_fx1 > 0.5 ? high : low);
+	ctlra_dev_light_set(dev, 15, c2_fx2 > 0.5 ? high : low);
+
+	/* beat flashies on < and > beside shift */
+	float c1_beat = mixxx_config_key_get("[Channel1]","beat_active");
+	float c2_beat = mixxx_config_key_get("[Channel2]","beat_active");
+	ctlra_dev_light_set(dev, 16, c1_beat > 0.5 ? high : low);
+	ctlra_dev_light_set(dev, 18, c2_beat > 0.5 ? high : low);
+
+	/* shift: bg light */
+	ctlra_dev_light_set(dev, 17, 0x03030303);
+
+	float c1_bpm = mixxx_config_key_get("[Channel1]","bpm");
+	int bpm = c1_bpm;
+	ctlra_dev_feedback_digits(dev, 0, bpm);
+	float c2_bpm = mixxx_config_key_get("[Channel2]","bpm");
+	bpm = c2_bpm;
+	ctlra_dev_feedback_digits(dev, 1, bpm);
 
 	ctlra_dev_light_flush(dev, 1);
 }

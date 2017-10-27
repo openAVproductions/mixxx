@@ -55,13 +55,19 @@ void script_event_func(struct ctlra_dev_t* dev,
 			pr = e->button.pressed;
 			//printf("btn: %d %d\n", e->button.id, pr);
 			switch(e->button.id) {
+			case 0:  if(pr) mixxx_config_key_toggle("[Channel1]", "play"); break;
+			case 14: if(pr) mixxx_config_key_toggle("[Channel2]", "play"); break;
 			/* FX 1 (left) enable buttons */
 			case 1: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit1_Effect3]", "enabled"); break;
 			case 2: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit1_Effect2]", "enabled"); break;
 			case 4: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit1_Effect1]", "enabled"); break;
 			case 5: mixxx_config_key_set("[EffectRack1_EffectUnit1]", "mix", pr ? 1.0f : 0.f);
 				break;
-			default: break;
+
+			case 7: mixxx_config_key_toggle("[Channel1]", "hotcue_2_activate"); break;
+			case 8: mixxx_config_key_toggle("[Channel2]", "hotcue_2_activate"); break;
+			default: printf("button %d\n", e->button.id);
+				break;
 			} break;
 
 		case CTLRA_EVENT_SLIDER:
