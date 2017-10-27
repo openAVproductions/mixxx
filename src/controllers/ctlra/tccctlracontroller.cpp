@@ -15,6 +15,8 @@
 static void error_func(void *userdata, const char *msg)
 {
 	printf("CtlraController: TCC says: %s\n", msg);
+	uint32_t *error = (uint32_t *)userdata;
+	*error = 1;
 }
 
 static void error(const char *msg)
@@ -155,12 +157,13 @@ int TccCtlraController::compile()
 		return -ENOMEM;
 	}
 
-	tcc_set_error_func(s, NULL, error_func);
+	uint32_t error_flag = 0;
+	tcc_set_error_func(s, &error_flag, error_func);
 	tcc_set_options(s, "-g");
 	tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
 
 	int ret = tcc_add_file(s, filepath);
-	if(ret < 0) {
+	if(ret < 0 || error_flag) {
 		printf("CtlraController: TCC Error, removing script from use.\n");
 		tcc_delete(s);
 		/* TODO: Show a QT Warning dialog saying script has a
@@ -193,13 +196,20 @@ int TccCtlraController::compile()
 		error("failed to insert ctlra light set() symbol\n");
 		return -EINVAL;
 	}
+	tcc_add_symbol(s, "ctlra_dev_feedback_digits", (void *)ctlra_dev_feedback_digits);
+	if(ret < 0) {
+		error("failed to insert ctlra feedback digits() symbol\n");
+		return -EINVAL;
+	}
 
 	if(program)
 		free(program);
 
 	program = calloc(1, tcc_relocate(s, NULL));
-	if(!program)
+	if(!program) {
 		error("failed to alloc mem for program\n");
+		return -EINVAL;
+	}
 	ret = tcc_relocate(s, program);
 	if(ret < 0)
 		error("failed to relocate code to program memory\n");
