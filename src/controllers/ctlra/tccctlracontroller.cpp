@@ -140,7 +140,10 @@ TccCtlraController::TccCtlraController(const struct ctlra_dev_info_t* info) :
 	   (strcmp(this->info->device, "SpaceMouse Pro") == 0)) {
 		filepath = "spacemouse_script.c";
 	}
-
+	if((strcmp(this->info->vendor, "LeapMotion") == 0) &&
+	   (strcmp(this->info->device, "3D Motion Controller") == 0)) {
+		filepath = "leapmotion_script.c";
+	}
 }
 
 TccCtlraController::~TccCtlraController()
