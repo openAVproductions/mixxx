@@ -116,10 +116,17 @@ TccCtlraController::TccCtlraController(const struct ctlra_dev_info_t* info) :
 
 	/* call function to scan available scripts */
 	printf("%s: %s: %s\n", __PRETTY_FUNCTION__, info->vendor, info->device);
+	filepath = "midi_generic_script.c";
 
 	/* match vendor/device against available scripts, select filepath */
-	filepath = "ni_d2_script.c";
-
+	if((strcmp(this->info->vendor, "Native Instruments") == 0) &&
+	   (strcmp(this->info->device, "Kontrol D2") == 0)) {
+		filepath = "ni_d2_script.c";
+	}
+	if((strcmp(this->info->vendor, "Native Instruments") == 0) &&
+	   (strcmp(this->info->device, "Maschine Mikro Mk2") == 0)) {
+		filepath = "ni_mm_mk2_script.c";
+	}
 	if((strcmp(this->info->vendor, "Native Instruments") == 0) &&
 	   (strcmp(this->info->device, "Kontrol Z1") == 0)) {
 		filepath = "ni_z1_script.c";
