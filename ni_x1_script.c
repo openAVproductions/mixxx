@@ -100,6 +100,9 @@ void script_event_func(struct ctlra_dev_t* dev,
 				mixxx_config_key_toggle("[Channel1]", hotcue_activate[i]);
 				} break;
 
+			case 29: if(pr) mixxx_config_key_toggle("[Channel1]", "beatloop_4"); break;
+			case 21: if(pr) mixxx_config_key_toggle("[Channel2]", "beatloop_4"); break;
+
 			/* left cue/play */
 			case 30: mixxx_config_key_toggle("[Channel1]", "cue_default"); break;
 			case 31: if(pr) mixxx_config_key_toggle("[Channel1]", "play"); break;
@@ -234,6 +237,11 @@ void script_feedback_func(struct ctlra_dev_t *dev, void *userdata)
 	ctlra_dev_light_set(dev, 31, c1_cue > 0.5 ? high : low);
 	ctlra_dev_light_set(dev, 33, c2_cue > 0.5 ? high : low);
 
+	/* Loop Enabled */
+	float c1_loop = mixxx_config_key_get("[Channel1]","loop_enabled");
+	float c2_loop = mixxx_config_key_get("[Channel2]","loop_enabled");
+	ctlra_dev_light_set(dev, 28, c1_loop > 0.5 ? high : low);
+	ctlra_dev_light_set(dev, 30, c2_loop > 0.5 ? high : low);
 
 	float c1_fx1 = mixxx_config_key_get("[EffectRack1_EffectUnit1]",
 					    "group_[Channel1]_enable");
