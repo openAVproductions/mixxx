@@ -128,9 +128,8 @@ void script_event_func(struct ctlra_dev_t* dev,
 			case 5:
 			case 6:
 			case 7:
-				mixxx_config_key_set(chans_quickfx_effect1[e->button.id - 4],
-						     "enabled",
-						     e->button.pressed);
+				/* FX enable / disable */
+				if(pr) mixxx_config_key_toggle(chans_quickfx_effect1[e->button.id - 4], "enabled");
 				break;
 			case 13:
 				break;
@@ -140,6 +139,9 @@ void script_event_func(struct ctlra_dev_t* dev,
 
 			case 26:
 				mixxx_config_key_set("[Master]","maximize_library", e->button.pressed);
+				break;
+			case 27:
+				if(pr) mixxx_config_key_set("[Library]","MoveFocusForward", e->button.pressed);
 				break;
 			case 30:
 				//mixxx_config_key_set(chans[d2->deck_id], beatloop_toggle_dur[7], e->slider.value);
@@ -393,6 +395,16 @@ void script_feedback_func(struct ctlra_dev_t *dev, void *userdata)
 			ctlra_dev_light_set(dev, NI_KONTROL_D2_LED_PAD_1 + i, 0);
 	}
 
+
+	float filter_1 = mixxx_config_key_get("[QuickEffectRack1_[Channel1]_Effect1]", "enabled");
+	float filter_2 = mixxx_config_key_get("[QuickEffectRack1_[Channel2]_Effect1]", "enabled");
+	float filter_3 = mixxx_config_key_get("[QuickEffectRack1_[Channel3]_Effect1]", "enabled");
+	float filter_4 = mixxx_config_key_get("[QuickEffectRack1_[Channel4]_Effect1]", "enabled");
+	ctlra_dev_light_set(dev,10, filter_1 > 0.5 ? 0xffffffff : 0);
+	ctlra_dev_light_set(dev,11, filter_2 > 0.5 ? 0xffffffff : 0);
+	ctlra_dev_light_set(dev, 9, filter_3 > 0.5 ? 0xffffffff : 0);
+	ctlra_dev_light_set(dev,12, filter_4 > 0.5 ? 0xffffffff : 0);
+
 	int cue_indicator = mixxx_config_key_get(chan,"cue_indicator");
 	uint32_t cue_led_1 = cue_indicator ? 0xffffffff : 0x11111111;
 	ctlra_dev_light_set(dev, NI_KONTROL_D2_LED_CUE , cue_led_1);
@@ -463,7 +475,7 @@ void drawa_rect(uint8_t *pixels,
 		int32_t width, int32_t height,
 		int32_t fill, uint32_t fill_col)
 {
-	uint16_t *px = (uint8_t *)pixels;
+	uint16_t *px = (uint16_t *)pixels;
 	const uint16_t uint16_max = -1;
 	const int32_t hi_yidx = WIDTH * y1;
 	const int32_t lo_yidx = WIDTH * (y1 + height);

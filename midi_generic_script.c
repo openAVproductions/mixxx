@@ -20,6 +20,8 @@ void script_get_vid_pid(int *out_vid, int *out_pid)
 struct mg_t {
 	uint8_t shift_pressed; /* 0 or 1 when "mode" button is pressed */
 	uint8_t update_fb;
+
+	float scroll;
 };
 
 int script_init_func()
@@ -54,6 +56,8 @@ void script_event_func(struct ctlra_dev_t* dev,
 			case 41: mixxx_config_key_toggle("[Channel1]", "hotcue_2_activate"); break;
 			case 42: mixxx_config_key_toggle("[Channel2]", "hotcue_1_activate"); break;
 			case 43: mixxx_config_key_toggle("[Channel2]", "hotcue_2_activate"); break;
+
+			case 48: mixxx_config_key_toggle("[Channel1]", "hotcue_2_activate"); break;
 			default:
 				break;
 			} break;
@@ -73,10 +77,17 @@ void script_event_func(struct ctlra_dev_t* dev,
 			case 8: mixxx_config_key_set("[QuickEffectRack1_[Channel2]]", "super1", e->slider.value); break;
 
 			case 10: mixxx_config_key_set("[Master]", "headMix", (e->slider.value * 2) - 1); break;
-			case 11: mixxx_config_key_set("[Channel1]", "volume", e->slider.value); break;
+			case  9: mixxx_config_key_set("[Channel1]", "volume", e->slider.value); break;
 			case 12: mixxx_config_key_set("[Channel2]", "volume", e->slider.value); break;
-			case 13: mixxx_config_key_set("[Master]", "crossfader", (e->slider.value * 2) - 1); break;
-			default: break;
+			//case 22: mixxx_config_key_set("[Master]", "crossfader", (e->slider.value * 2) - 1); break;
+
+			case 16:
+				 printf("the encoder, %f\n", e->slider.value);
+				 break;
+
+			default:
+				 printf("slider %d %f\n", e->slider.id, e->slider.value);
+				 break;
 			}
 		default: break;
 		}
