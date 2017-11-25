@@ -105,6 +105,16 @@ void script_event_func(struct ctlra_dev_t* dev,
 				if(pr) mixxx_config_key_set("[Library]", "MoveFocusBackward", 1);
 				break;
 
+			case 41: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit1]",
+							       "group_[Channel1]_enable"); break;
+			case 40: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit2]",
+							       "group_[Channel1]_enable"); break;
+			case 39: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit1]",
+							       "group_[Channel2]_enable"); break;
+			case 38: if(pr) mixxx_config_key_toggle("[EffectRack1_EffectUnit2]",
+							       "group_[Channel2]_enable"); break;
+
+
 			case 48: if(pr) mixxx_config_key_set("[Library]", "ChooseItem", 1); break;
 			case 49: if(pr) mixxx_config_key_set("[Channel2]", "reloop_toggle", 1); break;
 			//case 50: if(pr) mixxx_config_key_set("[Channel2]", "loop_move",  4); break;
@@ -294,6 +304,21 @@ void script_feedback_func(struct ctlra_dev_t *dev, void *userdata)
 	ctlra_dev_light_set(dev, 20, fx2_e2_enable ? high : 0x03030303);
 	float chan2_filter_enabled = mixxx_config_key_get("[QuickEffectRack1_[Channel2]_Effect1]", "enabled");
 	ctlra_dev_light_set(dev, 21, chan2_filter_enabled? high : 0x03030303);
+
+	/* Channel FX enable lights */
+	float c1_fx1 = mixxx_config_key_get("[EffectRack1_EffectUnit1]",
+					    "group_[Channel1]_enable");
+	float c1_fx2 = mixxx_config_key_get("[EffectRack1_EffectUnit2]",
+					    "group_[Channel1]_enable");
+	ctlra_dev_light_set(dev, 14, c1_fx1 > 0.5 ? high : low);
+	ctlra_dev_light_set(dev, 15, c1_fx2 > 0.5 ? high : low);
+	float c2_fx1 = mixxx_config_key_get("[EffectRack1_EffectUnit1]",
+					    "group_[Channel2]_enable");
+	float c2_fx2 = mixxx_config_key_get("[EffectRack1_EffectUnit2]",
+					    "group_[Channel2]_enable");
+	ctlra_dev_light_set(dev, 16, c2_fx1 > 0.5 ? high : low);
+	ctlra_dev_light_set(dev, 17, c2_fx2 > 0.5 ? high : low);
+
 
 	/* vu meters */
 	float vu_1 = mixxx_config_key_get("[Channel1]","VuMeter");
