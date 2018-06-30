@@ -55,13 +55,32 @@ CtlraEnumerator::~CtlraEnumerator()
 	mappa_destroy(m_mappa);
 }
 
+/* struct that passes metadata trough to the handle function. The
+ * token is *per target* - so each can scale values whatever way it
+ * wants! Value is always a 0-1 ranged float:
+ *  Final value = (value * range) + offset;
+ *
+ *  Eg: desired range is -1 to 1 (crossfader, pan dials..)
+ *      range = 2, offset = -1:
+ *  final = (value * 2) - 1;
+ */
+struct mixxx_scale_value_t {
+	float range;
+	float offset;
+};
+
 static void
 mixxx_mappa_test_func(uint32_t target_id, float value, void *token,
 		      uint32_t token_size, void *userdata)
 {
-	printf("%s\n", __func__);
-	float v = (value * 2) - 1;
-	ControlProxy("[Master]", "crossfader").set(v);
+	ControlProxy *cp = (ControlProxy *)userdata;
+	/* TODO: scaling of float value to expected range: eg crossfader */
+	if(token_size != sizeof(struct mixxx_scale_value_t)) {
+		printf("TOKEN SIZE ERROR! no scale value t available\n");
+	}
+	struct mixxx_scale_value_t *scale =
+		(struct mixxx_scale_value_t *)token;
+	cp->set((value * scale->range) + scale->offset);
 }
 
 QList<Controller*> CtlraEnumerator::queryDevices()
@@ -73,15 +92,46 @@ QList<Controller*> CtlraEnumerator::queryDevices()
 	}
 
 	struct mappa_target_t t = {0};
-	t.name = "mixxx_crossfader";
 	t.func = mixxx_mappa_test_func;
-	t.userdata = this;
 	uint32_t tid;
-	int ret = mappa_target_add(m_mappa, &t, &tid, 0, 0);
-	qDebug() << "CTLRA MIXXX TARGET REG returns " << ret;
+
+	struct mixxx_to_mappa_target_t {
+		const char *group;
+		const char *item;
+		struct mixxx_scale_value_t scale;
+	} targets[] = {
+		{"[Master]", "crossfader", .scale = { .range = 2, .offset = -1}},
+		{"[Channel1]", "volume"  , .scale = { .range = 1, .offset =  0}},
+		{"[Channel2]", "volume"  , .scale = { .range = 1, .offset =  0}},
+		{"[Channel1]", "play"    , .scale = { .range = 1, .offset =  0}},
+		{"[Channel2]", "play"    , .scale = { .range = 1, .offset =  0}},
+	};
+	const uint32_t targets_size = sizeof(targets) / sizeof(targets[0]);
+
+	for(int i = 0; i < targets_size; i++) {
+		char buf[256];
+		snprintf(buf, sizeof(buf), "mixxx%s%s", targets[i].group,
+			 targets[i].item);
+		t.name = buf;
+		/* allocate the control proxy instance as userdata to the
+		 * func. Allows casting and immidiate usage */
+		t.userdata = new ControlProxy(targets[i].group, targets[i].item);
+
+		int ret = mappa_target_add(m_mappa, &t, &tid, &targets[i].scale,
+					   sizeof(struct mixxx_scale_value_t));
+		if(ret)
+			printf("warning: ctlra target %s %s returns %d\n",
+			       targets[i].group, targets[i].item, ret);
+
+		/*
+		mappa_target_set_range(m_mappa, tid,
+				       targets[i].scale.range,
+		*/
+	}
+
 
 	printf("load bindings\n");
-	ret = mappa_load_bindings(m_mappa, "mixxx_z1.ini");
+	int ret = mappa_load_bindings(m_mappa, "mixxx_z1.ini");
 	if(ret)
 		printf("%s %d: load bindings failed, ret %d\n",
 		       __func__, __LINE__, ret);
