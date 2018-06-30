@@ -23,6 +23,10 @@
 #include "controllers/hid/hidenumerator.h"
 #endif
 
+#ifdef __CTLRA__
+#include "controllers/ctlra/ctlraenumerator.h"
+#endif
+
 #ifdef __BULK__
 #include "controllers/bulk/bulkenumerator.h"
 #endif
@@ -136,6 +140,9 @@ void ControllerManager::slotInitialize() {
 #endif
 #ifdef __HID__
     m_enumerators.append(new HidEnumerator());
+#endif
+#ifdef __HID__
+    m_enumerators.append(new CtlraEnumerator());
 #endif
 }
 
