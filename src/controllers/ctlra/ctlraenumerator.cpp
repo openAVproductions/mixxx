@@ -86,6 +86,8 @@ QList<Controller*> CtlraEnumerator::queryDevices()
 		{"[Channel2]", "volume"  , .max = 1, .min =  0},
 		{"[Channel1]", "play"    , .max = 1, .min =  0},
 		{"[Channel2]", "play"    , .max = 1, .min =  0},
+		{"[Channel1]", "cue"     , .max = 1, .min =  0},
+		{"[Channel2]", "cue"     , .max = 1, .min =  0},
 	};
 	const uint32_t targets_size = sizeof(targets) / sizeof(targets[0]);
 
@@ -110,12 +112,22 @@ QList<Controller*> CtlraEnumerator::queryDevices()
 			       tid);
 	}
 
-
-	printf("load bindings\n");
-	int ret = mappa_load_bindings(m_mappa, "mixxx_z1.ini");
-	if(ret)
-		printf("%s %d: load bindings failed, ret %d\n",
-		       __func__, __LINE__, ret);
+	const char *filenames[] = {
+		"mixxx_z1.ini",
+		"mixxx_x1.ini",
+		"mixxx_d2.ini",
+	};
+	const uint32_t filenames_size = (sizeof(filenames) /
+					sizeof(filenames[0]));
+	for(int i = 0; i < filenames_size; i++) {
+		int ret = mappa_add_config_file(m_mappa, filenames[i]);
+		if(ret) {
+			printf("%s %d:  failed to add config file %s, ret %d\n",
+			       __func__, __LINE__, filenames[i], ret);
+			continue;
+		}
+		printf("config file %s loaded OK\n", filenames[i]);
+	}
 
 	m_reader = new CtlraReader(m_mappa);
 	if(m_reader == nullptr) {
