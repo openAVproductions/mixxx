@@ -88,6 +88,11 @@ QList<Controller*> CtlraEnumerator::queryDevices()
 		{"[Channel2]", "play"    , .max = 1, .min =  0},
 		{"[Channel1]", "cue"     , .max = 1, .min =  0},
 		{"[Channel2]", "cue"     , .max = 1, .min =  0},
+		{"[Channel1]", "rate"    , .max = 1, .min =  0},
+		{"[Channel2]", "rate"    , .max = 1, .min =  0},
+		/* mixer lop/hip filter knobs */
+		{"[QuickEffectRack1_[Channel1]]", "super1", .max = 1, .min = 0},
+		{"[QuickEffectRack1_[Channel2]]", "super1", .max = 1, .min = 0},
 	};
 	const uint32_t targets_size = sizeof(targets) / sizeof(targets[0]);
 
