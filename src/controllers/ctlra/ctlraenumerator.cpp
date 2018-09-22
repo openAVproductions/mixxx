@@ -65,7 +65,7 @@ mixxx_mappa_test_func(uint32_t target_id, float value, void *token,
 
 QList<Controller*> CtlraEnumerator::queryDevices()
 {
-	m_mappa = mappa_create(NULL);
+	m_mappa = mappa_create(NULL, "Mixxx", "unique");
 	if(m_mappa == 0) {
 		printf("Ctlra error creating context!\n");
 		return m_devices;
@@ -110,23 +110,6 @@ QList<Controller*> CtlraEnumerator::queryDevices()
 		if(ret)
 			printf("warning: ctlra failed to set range on TID %d\n",
 			       tid);
-	}
-
-	const char *filenames[] = {
-		"mixxx_z1.ini",
-		"mixxx_x1.ini",
-		"mixxx_d2.ini",
-	};
-	const uint32_t filenames_size = (sizeof(filenames) /
-					sizeof(filenames[0]));
-	for(int i = 0; i < filenames_size; i++) {
-		int ret = mappa_add_config_file(m_mappa, filenames[i]);
-		if(ret) {
-			printf("%s %d:  failed to add config file %s, ret %d\n",
-			       __func__, __LINE__, filenames[i], ret);
-			continue;
-		}
-		printf("config file %s loaded OK\n", filenames[i]);
 	}
 
 	m_reader = new CtlraReader(m_mappa);
