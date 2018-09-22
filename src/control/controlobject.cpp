@@ -56,6 +56,11 @@ void ControlObject::initialize(ConfigKey key, bool bIgnoreNops, bool bTrack,
                 this, SLOT(privateValueChanged(double, QObject*)),
                 Qt::DirectConnection);
     }
+
+    const char *group = key.group.toLatin1().data();
+    const char *item = key.item.toLatin1().data();
+    if(strcmp(group, "[Master]") == 0)
+         printf("created control proxy %s %s\n", group, item);
 }
 
 // slot
