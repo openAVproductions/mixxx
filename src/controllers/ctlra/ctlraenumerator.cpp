@@ -63,6 +63,14 @@ mixxx_mappa_test_func(uint32_t target_id, float value, void *token,
 	cp->set(value);
 }
 
+static void
+mixxx_mappa_source_fb_func(float *value, void *token, uint32_t token_size,
+			   void *userdata)
+{
+	ControlProxy *cp = (ControlProxy *)userdata;
+	*value = cp->get();
+}
+
 QList<Controller*> CtlraEnumerator::queryDevices()
 {
 	m_mappa = mappa_create(NULL, "Mixxx", "unique");
@@ -125,6 +133,49 @@ QList<Controller*> CtlraEnumerator::queryDevices()
 			printf("warning: ctlra failed to set range on TID %d\n",
 			       tid);
 	}
+
+	/* register sources */
+{
+	struct mappa_source_t s = {0};
+	s.func = mixxx_mappa_source_fb_func;
+	uint32_t sid;
+
+	struct mixxx_to_mappa_source_t {
+		const char *group;
+		const char *item;
+		float max;
+		float min;
+	} sources[] = {
+		{"[Channel1]", "cue_indicator", .max = 1, .min =  0},
+		{"[Channel2]", "cue_indicator", .max = 1, .min =  0},
+		{"[Channel1]", "play_indicator", .max = 1, .min =  0},
+		{"[Channel2]", "play_indicator", .max = 1, .min =  0},
+	};
+	const uint32_t sources_size = sizeof(sources) / sizeof(sources[0]);
+	for(int i = 0; i < sources_size; i++) {
+		char buf[256];
+		snprintf(buf, sizeof(buf), "mixxx%s%s", sources[i].group,
+			 sources[i].item);
+		s.name = buf;
+		/* allocate the control proxy instance as userdata to the
+		 * func. Allows casting and immidiate usage */
+		s.userdata = new ControlProxy(sources[i].group, sources[i].item);
+
+		int ret = mappa_source_add(m_mappa, &s, &sid, 0, 0);
+		if(ret)
+			printf("warning: ctlra source %s %s returns %d\n",
+			       sources[i].group, sources[i].item, ret);
+
+#if 0
+		ret = mappa_source_set_range(m_mappa, sid, sources[i].max, sources[i].min);
+		if(ret)
+			printf("warning: ctlra failed to set range on TID %d\n",
+			       tid);
+#endif
+	}
+
+} /* register sources */
+
 
 	m_reader = new CtlraReader(m_mappa);
 	if(m_reader == nullptr) {
