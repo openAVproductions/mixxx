@@ -150,6 +150,19 @@ QList<Controller*> CtlraEnumerator::queryDevices()
 		{"[Channel2]", "cue_indicator", .max = 1, .min =  0},
 		{"[Channel1]", "play_indicator", .max = 1, .min =  0},
 		{"[Channel2]", "play_indicator", .max = 1, .min =  0},
+		{"[Channel1]", "volume", .max = 1, .min =  0},
+		{"[Channel2]", "volume", .max = 1, .min =  0},
+		{"[Channel1]", "playposition", .max = 1, .min =  0},
+		{"[Channel2]", "playposition", .max = 1, .min =  0},
+
+		{"[Channel1]", "hotcue_1_enabled", .max = 1, .min =  0},
+		{"[Channel2]", "hotcue_1_enabled", .max = 1, .min =  0},
+		{"[Channel1]", "hotcue_2_enabled", .max = 1, .min =  0},
+		{"[Channel2]", "hotcue_2_enabled", .max = 1, .min =  0},
+		{"[Channel1]", "hotcue_3_enabled", .max = 1, .min =  0},
+		{"[Channel2]", "hotcue_3_enabled", .max = 1, .min =  0},
+		{"[Channel1]", "hotcue_4_enabled", .max = 1, .min =  0},
+		{"[Channel2]", "hotcue_4_enabled", .max = 1, .min =  0},
 	};
 	const uint32_t sources_size = sizeof(sources) / sizeof(sources[0]);
 	for(int i = 0; i < sources_size; i++) {
